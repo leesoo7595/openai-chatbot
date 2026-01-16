@@ -11,7 +11,7 @@ export async function POST(req: Request) {
     const { stream, conversationId: ensuredId } = await createChatStream({
       messages,
       conversationId,
-    });
+   });
 
     const encoder = new TextEncoder();
 
