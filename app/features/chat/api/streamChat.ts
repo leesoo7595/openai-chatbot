@@ -1,5 +1,20 @@
 import type { ChatMessageForAPI } from "../types";
 
+async function getErrorMessage(res: Response) {
+  const contentType = res.headers.get("content-type") ?? "";
+
+  if (contentType.includes("application/json")) {
+    try {
+      const data = (await res.json()) as { error?: unknown };
+      if (typeof data?.error === "string") return data.error;
+    } catch {
+      // ignore
+    }
+  }
+
+  return `Request failed: ${res.status}`;
+}
+
 export async function streamChat(params: {
   messages: ChatMessageForAPI[];
   signal?: AbortSignal;
@@ -12,8 +27,11 @@ export async function streamChat(params: {
     signal: params.signal,
   });
 
-  if (!res.ok || !res.body) {
-    throw new Error(`Request failed: ${res.status}`);
+  if (!res.ok) {
+    throw new Error(await getErrorMessage(res));
+  }
+  if (!res.body) {
+    throw new Error("No response body");
   }
 
   const reader = res.body.getReader();
