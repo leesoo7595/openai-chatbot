@@ -49,6 +49,8 @@ export function useChat() {
     });
   };
 
+  const [conversationId, setConversationId] = useState<string | null>(null);
+
   const send = async () => {
     const text = input.trim();
     if (!text || loading) return;
@@ -61,14 +63,19 @@ export function useChat() {
     abortRef.current = controller;
 
     try {
-      await streamChat({
+      const { conversationId: newConversationId } = await streamChat({
         messages: [
           ...messages.map((m) => ({ role: m.role, content: m.content })),
           { role: "user", content: text },
         ],
+        conversationId: conversationId ?? undefined,
         signal: controller.signal,
         onToken: appendToLastAssistant,
       });
+
+      if (newConversationId && newConversationId !== conversationId) {
+        setConversationId(newConversationId);
+      }
     } catch (e: unknown) {
       const message =
         e instanceof DOMException && e.name === "AbortError"

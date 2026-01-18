@@ -17,13 +17,17 @@ async function getErrorMessage(res: Response) {
 
 export async function streamChat(params: {
   messages: ChatMessageForAPI[];
+  conversationId?: string;
   signal?: AbortSignal;
   onToken: (text: string) => void;
 }) {
   const res = await fetch("/api/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ messages: params.messages }),
+    body: JSON.stringify({ 
+      messages: params.messages,
+      conversationId: params.conversationId,
+     }),
     signal: params.signal,
   });
 
@@ -34,6 +38,8 @@ export async function streamChat(params: {
     throw new Error("No response body");
   }
 
+  const newConversationId = res.headers.get("X-Conversation-Id") ?? undefined;
+
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
 
@@ -43,4 +49,6 @@ export async function streamChat(params: {
     const chunk = decoder.decode(value, { stream: true });
     if (chunk) params.onToken(chunk);
   }
+
+  return { conversationId: newConversationId };
 }
