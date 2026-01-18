@@ -6,17 +6,29 @@ export const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+type Msg = { role: "user" | "assistant" | "system"; content: string };
 
 export async function POST(req: Request) {
   try {
-    const { messages, conversationId } = await req.json();
+    const { messages, conversationId } = await req.json()  as {
+      messages: Msg[];
+      conversationId?: string;
+    };
+
     const conv =
       conversationId
       ? await prisma.conversation.findUnique({ where: { id: conversationId } })
       : null;
     const ensuredConv = conv ?? await prisma.conversation.create({ data: {} });
 
-    const lastUser = [...messages].reverse().find(m => m.role === "user");
+    const systemPrompt = ensuredConv.systemPrompt?.trim();
+    const hasSystemMessage = messages.some((m) => m.role === "system");
+    const finalMessages: Msg[] =
+      systemPrompt && !hasSystemMessage
+        ? [{ role: "system", content: systemPrompt }, ...messages]
+        : messages;
+
+    const lastUser = [...finalMessages].reverse().find(m => m.role === "user");
     if (lastUser?.content) {
       await prisma.message.create({
         data: {
@@ -29,7 +41,7 @@ export async function POST(req: Request) {
 
     const stream = await openai.chat.completions.create({
       model: process.env.OPENAI_API_MODEL || "gpt-4o-mini-2024-07-18",
-      messages,
+      messages: finalMessages,
       stream: true,
     });
 
@@ -52,6 +64,8 @@ export async function POST(req: Request) {
         headers: {
           "Content-Type": "text/plain; charset=utf-8",
           "Cache-Control": "no-store",
+          // TODO: 이후 SSE로 변경 시 수정 필요
+          "X-Conversation-Id": ensuredConv.id,
         },
       }
     );
