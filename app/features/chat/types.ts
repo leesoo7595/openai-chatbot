@@ -2,7 +2,7 @@ export type Role = "user" | "assistant" | "system";
 
 export type ChatMessage = {
   id: string;
-  role: Exclude<Role, "system">; // UI에서는 user/assistant만
+  role: Exclude<Role, "system">;
   content: string;
 };
 
