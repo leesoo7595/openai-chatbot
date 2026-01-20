@@ -71,6 +71,9 @@ export function useChat() {
         conversationId: conversationId ?? undefined,
         signal: controller.signal,
         onToken: appendToLastAssistant,
+        onQueryRouting: (qr) => {
+          console.log("Query Routing info:", qr);
+        }
       });
 
       if (newConversationId && newConversationId !== conversationId) {

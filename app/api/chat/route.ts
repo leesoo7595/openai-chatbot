@@ -20,8 +20,9 @@ export async function POST(req: Request) {
         async start(controller) {
           try {
             for await (const chunk of stream) {
-              const text = chunk.choices[0]?.delta?.content ?? "";
-              if (text) controller.enqueue(encoder.encode(text));
+              controller.enqueue(
+                encoder.encode(JSON.stringify(chunk) + "\n")
+              );
             }
           } finally {
             controller.close();
@@ -30,7 +31,7 @@ export async function POST(req: Request) {
       }),
       {
         headers: {
-          "Content-Type": "text/plain; charset=utf-8",
+          "Content-Type": "application/x-ndjson; charset=utf-8",
           "Cache-Control": "no-store",
           "X-Conversation-Id": ensuredId,
         },

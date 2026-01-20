@@ -1,4 +1,7 @@
 import type { ChatMessageForAPI } from "../types";
+import { getDeltaContent, getQueryRouting } from "@/lib/streaming/chatChunk"
+import { parseJsonLine } from "@/lib/streaming/ndjson"
+import { QueryRouting } from "@/lib/streaming/types"
 
 async function getErrorMessage(res: Response) {
   const contentType = res.headers.get("content-type") ?? "";
@@ -20,14 +23,15 @@ export async function streamChat(params: {
   conversationId?: string;
   signal?: AbortSignal;
   onToken: (text: string) => void;
+  onQueryRouting?: (qr: QueryRouting) => void;
 }) {
   const res = await fetch("/api/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ 
+    body: JSON.stringify({
       messages: params.messages,
       conversationId: params.conversationId,
-     }),
+    }),
     signal: params.signal,
   });
 
@@ -43,11 +47,36 @@ export async function streamChat(params: {
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
 
+  let buffer = "";
+  let routingEmitted = false;
+
   while (true) {
     const { value, done } = await reader.read();
     if (done) break;
-    const chunk = decoder.decode(value, { stream: true });
-    if (chunk) params.onToken(chunk);
+
+    buffer += decoder.decode(value, { stream: true });
+
+    let idx: number;
+    while ((idx = buffer.indexOf("\n")) !== -1) {
+      const line = buffer.slice(0, idx).trim();
+      buffer = buffer.slice(idx + 1);
+
+      if (!line) continue;
+
+      const parsed = parseJsonLine(line);
+      if (parsed == null) continue;
+
+      if (!routingEmitted) {
+        const qr = getQueryRouting(parsed);
+        if (qr) {
+          params.onQueryRouting?.(qr);
+          routingEmitted = true;
+        }
+      }
+
+      const text = getDeltaContent(parsed);
+      if (text) params.onToken(text);
+    }
   }
 
   return { conversationId: newConversationId };
