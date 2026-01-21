@@ -18,9 +18,11 @@ model Message {
   id             String       @id @default(cuid())
   conversationId String
   role           String
-  model          String?
   content        String
   createdAt      DateTime     @default(now())
+
+  selectedModel  String?
+  queryRouting   Json?
 
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
