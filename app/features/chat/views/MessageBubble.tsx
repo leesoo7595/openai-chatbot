@@ -1,6 +1,6 @@
 "use client";
 
-import { Role } from "../types"
+import { Role } from "../types";
 
 export default function MessageBubble({
   role,

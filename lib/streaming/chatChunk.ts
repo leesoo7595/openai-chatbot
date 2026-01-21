@@ -1,4 +1,4 @@
-import { QueryRouting } from "./types"
+import { QueryRouting } from "./types";
 
 function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null;
@@ -21,10 +21,17 @@ export function getQueryRouting(obj: unknown): QueryRouting | undefined {
     .map((g) => ({
       model: typeof g["model"] === "string" ? g["model"] : "",
       grade_label: typeof g["grade_label"] === "string" ? g["grade_label"] : "",
-      grade_value: typeof g["grade_value"] === "number" ? g["grade_value"] : NaN,
+      grade_value:
+        typeof g["grade_value"] === "number" ? g["grade_value"] : NaN,
       score: typeof g["score"] === "number" ? g["score"] : NaN,
     }))
-    .filter((g) => g.model && g.grade_label && Number.isFinite(g.grade_value) && Number.isFinite(g.score));
+    .filter(
+      (g) =>
+        g.model &&
+        g.grade_label &&
+        Number.isFinite(g.grade_value) &&
+        Number.isFinite(g.score),
+    );
 
   return { selected_model, grades: parsedGrades };
 }

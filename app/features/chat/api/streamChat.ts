@@ -1,7 +1,7 @@
 import type { ChatMessageForAPI } from "../types";
-import { getDeltaContent, getQueryRouting } from "@/lib/streaming/chatChunk"
-import { parseJsonLine } from "@/lib/streaming/ndjson"
-import { QueryRouting } from "@/lib/streaming/types"
+import { getDeltaContent, getQueryRouting } from "@/lib/streaming/chatChunk";
+import { parseJsonLine } from "@/lib/streaming/ndjson";
+import { QueryRouting } from "@/lib/streaming/types";
 
 async function getErrorMessage(res: Response) {
   const contentType = res.headers.get("content-type") ?? "";

@@ -1,4 +1,3 @@
-
 export type QueryRouting = {
   selected_model: string;
   grades: Array<{

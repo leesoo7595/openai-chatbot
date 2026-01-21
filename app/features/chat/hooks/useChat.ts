@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 
-import { QueryRouting } from "@/lib/streaming/types"
+import { QueryRouting } from "@/lib/streaming/types";
 import type { ChatMessage } from "../types";
 import { streamChat } from "../api/streamChat";
 
@@ -19,10 +19,13 @@ export function useChat() {
 
   const abortRef = useRef<AbortController | null>(null);
 
-  const canSend = useMemo(() => input.trim().length > 0 && !loading, [input, loading]);
+  const canSend = useMemo(
+    () => input.trim().length > 0 && !loading,
+    [input, loading],
+  );
 
   const stop = () => abortRef.current?.abort();
-  
+
   const pendingAssistantIdRef = useRef<string | null>(null);
 
   const appendToLastAssistant = (chunk: string) => {
@@ -30,9 +33,7 @@ export function useChat() {
     if (!id) return;
 
     setMessages((prev) =>
-      prev.map((m) =>
-        m.id === id ? { ...m, content: m.content + chunk } : m
-      )
+      prev.map((m) => (m.id === id ? { ...m, content: m.content + chunk } : m)),
     );
   };
 
@@ -44,8 +45,8 @@ export function useChat() {
       prev.map((m) =>
         m.id === id
           ? { ...m, selectedModel: qr.selected_model, queryRouting: qr }
-          : m
-      )
+          : m,
+      ),
     );
   };
 
@@ -55,8 +56,8 @@ export function useChat() {
 
     setMessages((prev) =>
       prev.map((m) =>
-        m.id === id ? { ...m, content: `에러: ${message}` } : m
-      )
+        m.id === id ? { ...m, content: `에러: ${message}` } : m,
+      ),
     );
   };
 
@@ -69,7 +70,11 @@ export function useChat() {
     const userMsg: ChatMessage = { id: uid(), role: "user", content: text };
 
     const assistantId = uid();
-    const assistantMsg: ChatMessage = { id: assistantId, role: "assistant", content: "" };
+    const assistantMsg: ChatMessage = {
+      id: assistantId,
+      role: "assistant",
+      content: "",
+    };
     pendingAssistantIdRef.current = assistantId;
 
     setInput("");
@@ -78,7 +83,7 @@ export function useChat() {
 
     const controller = new AbortController();
     abortRef.current = controller;
-  
+
     try {
       const { conversationId: newConversationId } = await streamChat({
         messages: [
@@ -88,7 +93,7 @@ export function useChat() {
         conversationId: conversationId ?? undefined,
         signal: controller.signal,
         onToken: appendToLastAssistant,
-        onQueryRouting: setLastAssistantRouting
+        onQueryRouting: setLastAssistantRouting,
       });
 
       if (newConversationId && newConversationId !== conversationId) {

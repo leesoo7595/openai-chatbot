@@ -37,7 +37,9 @@ export default function ChatComposer({
           보내기
         </button>
       </div>
-      <p className="mt-2 text-[11px] text-zinc-500">Enter 전송 · Shift+Enter 줄바꿈</p>
+      <p className="mt-2 text-[11px] text-zinc-500">
+        Enter 전송 · Shift+Enter 줄바꿈
+      </p>
     </footer>
   );
 }

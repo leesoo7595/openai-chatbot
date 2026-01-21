@@ -1,6 +1,9 @@
-import { QueryRouting } from "@/lib/streaming/types"
+import { QueryRouting } from "@/lib/streaming/types";
 
-export function AssistantMeta({ selectedModel, queryRouting }: {
+export function AssistantMeta({
+  selectedModel,
+  queryRouting,
+}: {
   selectedModel?: string;
   queryRouting?: QueryRouting;
 }) {
