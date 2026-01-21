@@ -1,4 +1,4 @@
-import type { QueryRouting } from "@/lib/streaming/types"
+import type { QueryRouting } from "@/lib/streaming/types";
 
 export type Role = "user" | "assistant" | "system";
 

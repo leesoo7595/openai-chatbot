@@ -20,9 +20,7 @@ export async function POST(req: Request) {
         async start(controller) {
           try {
             for await (const chunk of stream) {
-              controller.enqueue(
-                encoder.encode(JSON.stringify(chunk) + "\n")
-              );
+              controller.enqueue(encoder.encode(JSON.stringify(chunk) + "\n"));
             }
           } finally {
             controller.close();
@@ -35,11 +33,15 @@ export async function POST(req: Request) {
           "Cache-Control": "no-store",
           "X-Conversation-Id": ensuredId,
         },
-      }
+      },
     );
   } catch (e: unknown) {
     const message =
-      e instanceof Error ? e.message : typeof e === "string" ? e : "Unknown error";
+      e instanceof Error
+        ? e.message
+        : typeof e === "string"
+          ? e
+          : "Unknown error";
     return Response.json({ error: message }, { status: 500 });
   }
 }

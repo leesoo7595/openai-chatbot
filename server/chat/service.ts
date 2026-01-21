@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import type { ChatCompletionChunk } from "openai/resources"
+import type { ChatCompletionChunk } from "openai/resources";
 
 import { hasQueryRouting, type Msg } from "./types";
 import {
@@ -15,7 +15,10 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-export async function createChatStream(params: { messages: Msg[]; conversationId?: string }) {
+export async function createChatStream(params: {
+  messages: Msg[];
+  conversationId?: string;
+}) {
   const conv = await ensureConversation(params.conversationId);
 
   const systemPrompt = conv.systemPrompt.trim();
@@ -30,11 +33,12 @@ export async function createChatStream(params: { messages: Msg[]; conversationId
   const assistant = await createAssistantPlaceholder(conv.id);
   const assistantMessageId = assistant.id;
 
-  const rawStream: AsyncIterable<ChatCompletionChunk> = await openai.chat.completions.create({
-    model: process.env.OPENAI_API_MODEL || "gpt-4o-mini-2024-07-18",
-    messages: finalMessages,
-    stream: true,
-  });
+  const rawStream: AsyncIterable<ChatCompletionChunk> =
+    await openai.chat.completions.create({
+      model: process.env.OPENAI_API_MODEL || "gpt-4o-mini-2024-07-18",
+      messages: finalMessages,
+      stream: true,
+    });
 
   async function* streamWithPersistence() {
     let routingSaved = false;
@@ -62,7 +66,7 @@ export async function createChatStream(params: { messages: Msg[]; conversationId
     } catch (e) {
       await finalizeAssistantContent(
         assistantMessageId,
-        `에러: ${e instanceof Error ? e.message : String(e)}`
+        `에러: ${e instanceof Error ? e.message : String(e)}`,
       );
       throw e;
     }

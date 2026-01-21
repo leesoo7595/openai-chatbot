@@ -10,13 +10,18 @@ export async function ensureConversation(conversationId?: string) {
     return { ...conv, systemPrompt: conv.systemPrompt ?? "" };
   }
 
-  const conv = await prisma.conversation.findUnique({ where: { id: conversationId } });
+  const conv = await prisma.conversation.findUnique({
+    where: { id: conversationId },
+  });
   const ensured = conv ?? (await prisma.conversation.create({ data: {} }));
 
   return { ...ensured, systemPrompt: ensured.systemPrompt ?? "" };
 }
 
-export async function saveLastUserMessage(conversationId: string, messages: Msg[]) {
+export async function saveLastUserMessage(
+  conversationId: string,
+  messages: Msg[],
+) {
   const lastUser = [...messages].reverse().find((m) => m.role === "user");
   if (!lastUser?.content) return;
 
@@ -50,7 +55,10 @@ export async function saveAssistantRouting(params: {
   });
 }
 
-export async function finalizeAssistantContent(messageId: string, content: string) {
+export async function finalizeAssistantContent(
+  messageId: string,
+  content: string,
+) {
   return prisma.message.update({
     where: { id: messageId },
     data: { content },

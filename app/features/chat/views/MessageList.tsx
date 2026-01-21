@@ -1,7 +1,7 @@
 "use client";
 
 import type { ChatMessage } from "../types";
-import { AssistantMeta } from "./AssistantMeta"
+import { AssistantMeta } from "./AssistantMeta";
 import MessageBubble from "./MessageBubble";
 
 export default function MessageList({ messages }: { messages: ChatMessage[] }) {
@@ -11,9 +11,9 @@ export default function MessageList({ messages }: { messages: ChatMessage[] }) {
         <div key={m.id}>
           <MessageBubble role={m.role} content={m.content} />
           {m.role === "assistant" && (
-            <AssistantMeta 
+            <AssistantMeta
               selectedModel={m.selectedModel}
-              queryRouting={m.queryRouting} 
+              queryRouting={m.queryRouting}
             />
           )}
         </div>
