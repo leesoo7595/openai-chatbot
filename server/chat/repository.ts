@@ -1,3 +1,6 @@
+import type { Prisma } from "@prisma/client";
+
+import type { QueryRouting } from "@/lib/streaming/types";
 import { prisma } from "@/server/db";
 import type { Msg } from "./types";
 
@@ -23,5 +26,33 @@ export async function saveLastUserMessage(conversationId: string, messages: Msg[
       role: "user",
       content: lastUser.content,
     },
+  });
+}
+
+export async function createAssistantPlaceholder(conversationId: string) {
+  return prisma.message.create({
+    data: { conversationId, role: "assistant", content: "" },
+    select: { id: true },
+  });
+}
+
+export async function saveAssistantRouting(params: {
+  messageId: string;
+  selectedModel: string;
+  queryRouting: QueryRouting;
+}) {
+  return prisma.message.update({
+    where: { id: params.messageId },
+    data: {
+      selectedModel: params.selectedModel,
+      queryRouting: params.queryRouting satisfies Prisma.InputJsonValue,
+    },
+  });
+}
+
+export async function finalizeAssistantContent(messageId: string, content: string) {
+  return prisma.message.update({
+    where: { id: messageId },
+    data: { content },
   });
 }
