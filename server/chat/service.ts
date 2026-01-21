@@ -13,7 +13,7 @@ export async function createChatStream(params: {
 }) {
   const conv = await ensureConversation(params.conversationId);
 
-  const systemPrompt = conv.systemPrompt?.trim();
+  const systemPrompt = conv.systemPrompt.trim();
   const hasSystemMessage = params.messages.some((m) => m.role === "system");
   const finalMessages: Msg[] =
     systemPrompt && !hasSystemMessage

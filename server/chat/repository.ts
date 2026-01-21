@@ -2,9 +2,15 @@ import { prisma } from "@/server/db";
 import type { Msg } from "./types";
 
 export async function ensureConversation(conversationId?: string) {
-  if (!conversationId) return prisma.conversation.create({ data: {} });
+  if (!conversationId) {
+    const conv = await prisma.conversation.create({ data: {} });
+    return { ...conv, systemPrompt: conv.systemPrompt ?? "" };
+  }
+
   const conv = await prisma.conversation.findUnique({ where: { id: conversationId } });
-  return conv ?? prisma.conversation.create({ data: {} });
+  const ensured = conv ?? (await prisma.conversation.create({ data: {} }));
+
+  return { ...ensured, systemPrompt: ensured.systemPrompt ?? "" };
 }
 
 export async function saveLastUserMessage(conversationId: string, messages: Msg[]) {
