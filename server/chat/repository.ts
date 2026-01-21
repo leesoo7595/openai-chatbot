@@ -4,6 +4,22 @@ import type { QueryRouting } from "@/lib/streaming/types";
 import { prisma } from "@/server/db";
 import type { Msg } from "./types";
 
+async function touchConversation(
+  tx: Prisma.TransactionClient,
+  conversationId: string,
+  content: string,
+  createdAt: Date,
+) {
+  await tx.conversation.update({
+    where: { id: conversationId },
+    data: {
+      lastMessageAt: createdAt,
+      lastMessagePreview: content.slice(0, 300),
+      // updatedAt은 @updatedAt이 자동 갱신
+    },
+  });
+}
+
 export async function ensureConversation(conversationId?: string) {
   if (!conversationId) {
     const conv = await prisma.conversation.create({ data: {} });
@@ -18,6 +34,7 @@ export async function ensureConversation(conversationId?: string) {
   return { ...ensured, systemPrompt: ensured.systemPrompt ?? "" };
 }
 
+// TODO: prevent duplicate user message saves (idempotency: clientMessageId or request-level userMessage)
 export async function saveLastUserMessage(
   conversationId: string,
   messages: Msg[],
@@ -25,12 +42,21 @@ export async function saveLastUserMessage(
   const lastUser = [...messages].reverse().find((m) => m.role === "user");
   if (!lastUser?.content) return;
 
-  await prisma.message.create({
-    data: {
+  await prisma.$transaction(async (tx) => {
+    const msg = await tx.message.create({
+      data: {
+        conversationId,
+        role: "user",
+        content: lastUser.content,
+      },
+    });
+
+    await touchConversation(
+      tx,
       conversationId,
-      role: "user",
-      content: lastUser.content,
-    },
+      lastUser.content,
+      msg.createdAt,
+    );
   });
 }
 
@@ -59,8 +85,20 @@ export async function finalizeAssistantContent(
   messageId: string,
   content: string,
 ) {
-  return prisma.message.update({
-    where: { id: messageId },
-    data: { content },
+  return prisma.$transaction(async (tx) => {
+    const msg = await tx.message.update({
+      where: { id: messageId },
+      data: { content },
+      select: {
+        id: true,
+        content: true,
+        createdAt: true,
+        conversationId: true,
+      },
+    });
+
+    await touchConversation(tx, msg.conversationId, content, new Date());
+
+    return msg;
   });
 }
