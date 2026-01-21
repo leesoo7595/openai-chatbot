@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+
 import type { ChatMessage } from "../types";
 import { streamChat } from "../api/streamChat";
 
@@ -20,33 +21,29 @@ export function useChat() {
   const canSend = useMemo(() => input.trim().length > 0 && !loading, [input, loading]);
 
   const stop = () => abortRef.current?.abort();
-
-  const pushUserAndPlaceholder = (text: string) => {
-    const userMsg: ChatMessage = { id: uid(), role: "user", content: text };
-    const assistant: ChatMessage = { id: uid(), role: "assistant", content: "" };
-    setMessages((prev) => [...prev, userMsg, assistant]);
-  };
+  
+  const pendingAssistantIdRef = useRef<string | null>(null);
 
   const appendToLastAssistant = (chunk: string) => {
-    setMessages((prev) => {
-      const last = prev[prev.length - 1];
-      if (!last || last.role !== "assistant") return prev;
-      const copy = [...prev];
-      copy[copy.length - 1] = { ...last, content: last.content + chunk };
-      return copy;
-    });
+    const id = pendingAssistantIdRef.current;
+    if (!id) return;
+
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === id ? { ...m, content: m.content + chunk } : m
+      )
+    );
   };
 
   const setLastAssistantError = (message: string) => {
-    setMessages((prev) => {
-      const last = prev[prev.length - 1];
-      if (last?.role === "assistant" && last.content === "") {
-        const copy = [...prev];
-        copy[copy.length - 1] = { ...last, content: `에러: ${message}` };
-        return copy;
-      }
-      return [...prev, { id: uid(), role: "assistant", content: `에러: ${message}` }];
-    });
+    const id = pendingAssistantIdRef.current;
+    if (!id) return;
+
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === id ? { ...m, content: `에러: ${message}` } : m
+      )
+    );
   };
 
   const [conversationId, setConversationId] = useState<string | null>(null);
@@ -55,13 +52,19 @@ export function useChat() {
     const text = input.trim();
     if (!text || loading) return;
 
+    const userMsg: ChatMessage = { id: uid(), role: "user", content: text };
+
+    const assistantId = uid();
+    const assistantMsg: ChatMessage = { id: assistantId, role: "assistant", content: "" };
+    pendingAssistantIdRef.current = assistantId;
+
     setInput("");
     setLoading(true);
-    pushUserAndPlaceholder(text);
+    setMessages((prev) => [...prev, userMsg, assistantMsg]);
 
     const controller = new AbortController();
     abortRef.current = controller;
-
+  
     try {
       const { conversationId: newConversationId } = await streamChat({
         messages: [
@@ -91,6 +94,7 @@ export function useChat() {
     } finally {
       setLoading(false);
       abortRef.current = null;
+      pendingAssistantIdRef.current = null;
     }
   };
 
