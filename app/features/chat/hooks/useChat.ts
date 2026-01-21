@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 
+import { QueryRouting } from "@/lib/streaming/types"
 import type { ChatMessage } from "../types";
 import { streamChat } from "../api/streamChat";
 
@@ -31,6 +32,19 @@ export function useChat() {
     setMessages((prev) =>
       prev.map((m) =>
         m.id === id ? { ...m, content: m.content + chunk } : m
+      )
+    );
+  };
+
+  const setLastAssistantRouting = (qr: QueryRouting) => {
+    const id = pendingAssistantIdRef.current;
+    if (!id) return;
+
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === id
+          ? { ...m, selectedModel: qr.selected_model, queryRouting: qr }
+          : m
       )
     );
   };
@@ -74,9 +88,7 @@ export function useChat() {
         conversationId: conversationId ?? undefined,
         signal: controller.signal,
         onToken: appendToLastAssistant,
-        onQueryRouting: (qr) => {
-          console.log("Query Routing info:", qr);
-        }
+        onQueryRouting: setLastAssistantRouting
       });
 
       if (newConversationId && newConversationId !== conversationId) {
