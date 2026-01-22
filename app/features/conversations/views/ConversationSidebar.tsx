@@ -14,7 +14,7 @@ export function ConversationSidebar() {
     <aside className="flex h-full w-full flex-col border-r border-zinc-800 bg-zinc-950 text-zinc-100">
       <div className="p-3">
         <Link
-          href="/"
+          href="/c"
           className="
             flex items-center justify-center
             rounded-xl border border-zinc-800
