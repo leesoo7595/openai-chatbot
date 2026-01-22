@@ -5,9 +5,19 @@ import { useChat } from "../hooks/useChat";
 import ChatHeader from "./ChatHeader";
 import MessageList from "./MessageList";
 import ChatComposer from "./ChatComposer";
+import { ChatMessage } from "../types";
+import { useConversationMessagesQuery } from "../../conversations/hooks/useConversationMessagesQuery";
 
-export default function ChatView() {
-  const { messages, input, setInput, loading, canSend, send, stop } = useChat();
+const WELCOME_MESSAGE: ChatMessage = {
+  id: "welcome",
+  role: "assistant",
+  content: "안녕! 무엇을 도와줄까?",
+};
+
+export default function ChatView({ conversationId }: { conversationId: string | undefined }) {
+  const { data: messages = [] } = useConversationMessagesQuery(conversationId);
+
+  const { input, setInput, loading, canSend, send, stop } = useChat({ conversationId });
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -20,7 +30,7 @@ export default function ChatView() {
         <ChatHeader loading={loading} onStop={stop} />
 
         <section className="flex-1 overflow-y-auto px-4 py-6">
-          <MessageList messages={messages} />
+          <MessageList messages={messages.length ? messages : [WELCOME_MESSAGE]} />
           <div ref={bottomRef} />
         </section>
 
