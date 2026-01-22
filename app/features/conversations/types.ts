@@ -1,6 +1,6 @@
 export interface Conversation {
   id: string;
-  title: string | null;
+  title: string;
   lastMessagePreview: string | null;
   lastMessageAt: string;
 }
