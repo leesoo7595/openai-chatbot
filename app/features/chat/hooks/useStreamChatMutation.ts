@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { streamChat } from "../api/streamChat";
+import { streamChat } from "../api";
 
 export function useStreamChatMutation() {
   const qc = useQueryClient();

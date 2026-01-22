@@ -1,4 +1,4 @@
-import type { ChatMessageForAPI } from "../types";
+import type { ChatMessageForAPI } from "./types";
 import { getDeltaContent, getQueryRouting } from "@/lib/streaming/chatChunk";
 import { parseJsonLine } from "@/lib/streaming/ndjson";
 import { QueryRouting } from "@/lib/streaming/types";
