@@ -10,10 +10,14 @@ function uid() {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
+const WELCOME_MESSAGE: ChatMessage = {
+  id: "welcome",
+  role: "assistant",
+  content: "안녕! 무엇을 도와줄까?",
+};
+
 export function useChat() {
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    { id: uid(), role: "assistant", content: "안녕! 무엇을 도와줄까?" },
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
 
   const abortRef = useRef<AbortController | null>(null);
@@ -107,5 +111,7 @@ export function useChat() {
     }
   };
 
-  return { messages, input, setInput, loading, canSend, send, stop };
+  const uiMessages = messages.length === 0 ? [WELCOME_MESSAGE] : messages;
+
+  return { messages: uiMessages, input, setInput, loading, canSend, send, stop };
 }
