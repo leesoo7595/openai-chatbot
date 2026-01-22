@@ -7,7 +7,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <ConversationSidebar />
       </aside>
 
-      <main className="flex-1 min-w-0">{children}</main>
+      <main className="flex min-h-0 flex-1 min-w-0 flex-col overflow-auto">{children}</main>
     </div>
   );
 }
