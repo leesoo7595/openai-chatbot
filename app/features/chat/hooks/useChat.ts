@@ -4,7 +4,7 @@ import { useMemo, useRef, useState } from "react";
 
 import { QueryRouting } from "@/lib/streaming/types";
 import type { ChatMessage } from "../types";
-import { streamChat } from "../api/streamChat";
+import { useStreamChatMutation } from "./useStreamChatMutation";
 
 function uid() {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -15,18 +15,16 @@ export function useChat() {
     { id: uid(), role: "assistant", content: "안녕! 무엇을 도와줄까?" },
   ]);
   const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
 
   const abortRef = useRef<AbortController | null>(null);
+  const pendingAssistantIdRef = useRef<string | null>(null);
 
-  const canSend = useMemo(
-    () => input.trim().length > 0 && !loading,
-    [input, loading],
-  );
+  const streamMutation = useStreamChatMutation();
+  const loading = streamMutation.isPending;
+
+  const canSend = useMemo(() => input.trim().length > 0 && !loading, [input, loading]);
 
   const stop = () => abortRef.current?.abort();
-
-  const pendingAssistantIdRef = useRef<string | null>(null);
 
   const appendToLastAssistant = (chunk: string) => {
     const id = pendingAssistantIdRef.current;
@@ -43,9 +41,7 @@ export function useChat() {
 
     setMessages((prev) =>
       prev.map((m) =>
-        m.id === id
-          ? { ...m, selectedModel: qr.selected_model, queryRouting: qr }
-          : m,
+        m.id === id ? { ...m, selectedModel: qr.selected_model, queryRouting: qr } : m,
       ),
     );
   };
@@ -55,9 +51,7 @@ export function useChat() {
     if (!id) return;
 
     setMessages((prev) =>
-      prev.map((m) =>
-        m.id === id ? { ...m, content: `에러: ${message}` } : m,
-      ),
+      prev.map((m) => (m.id === id ? { ...m, content: `에러: ${message}` } : m)),
     );
   };
 
@@ -78,14 +72,13 @@ export function useChat() {
     pendingAssistantIdRef.current = assistantId;
 
     setInput("");
-    setLoading(true);
     setMessages((prev) => [...prev, userMsg, assistantMsg]);
 
     const controller = new AbortController();
     abortRef.current = controller;
 
     try {
-      const { conversationId: newConversationId } = await streamChat({
+      const { conversationId: newConversationId } = await streamMutation.mutateAsync({
         messages: [
           ...messages.map((m) => ({ role: m.role, content: m.content })),
           { role: "user", content: text },
@@ -109,7 +102,6 @@ export function useChat() {
 
       setLastAssistantError(message);
     } finally {
-      setLoading(false);
       abortRef.current = null;
       pendingAssistantIdRef.current = null;
     }
