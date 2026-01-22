@@ -32,7 +32,7 @@ export function ConversationItem({
       />
 
       <div className="min-w-0 flex-1">
-        <div className="truncate font-medium">{conversation.title?.trim() || "새로운 대화"}</div>
+        <div className="truncate font-medium">{conversation.title.trim()}</div>
         <div className="mt-0.5 truncate text-[12px] text-zinc-500">
           {conversation.lastMessagePreview || " "}
         </div>
