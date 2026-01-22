@@ -1,14 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 import { useConversationsQuery } from "../hooks/useConversationsQuery";
 import { ConversationItem } from "./ConversationItem";
+import { useDeleteConversationMutation } from "../hooks/useDeleteConversationMutation";
 
 export function ConversationSidebar() {
   const { data: conversations = [] } = useConversationsQuery();
   const pathname = usePathname();
+  const id = pathname.split("/")[2];
+  const router = useRouter();
+
+  const deleteConversation = useDeleteConversationMutation({
+    onDeleted: (deletedId) => {
+      if (deletedId === id) router.push("/c");
+    },
+  });
 
   return (
     <aside className="flex h-full w-full flex-col border-r border-zinc-800 bg-zinc-950 text-zinc-100">
@@ -38,7 +47,7 @@ export function ConversationSidebar() {
               key={conv.id}
               conversation={conv}
               isActive={pathname === `/c/${conv.id}`}
-              onDelete={() => alert("삭제 기능 준비 중")}
+              onDelete={deleteConversation.mutate}
             />
           ))}
         </div>
