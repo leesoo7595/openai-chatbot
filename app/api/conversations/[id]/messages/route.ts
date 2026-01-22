@@ -1,13 +1,10 @@
 import { prisma } from "@/server/db";
 
-export async function GET(
-  _req: Request,
-  { params }: { params: { conversationId: string } },
-) {
-  const { conversationId } = params;
+export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
 
   const conv = await prisma.conversation.findUnique({
-    where: { id: conversationId },
+    where: { id },
     select: { id: true },
   });
 
@@ -16,7 +13,7 @@ export async function GET(
   }
 
   const messages = await prisma.message.findMany({
-    where: { conversationId },
+    where: { conversationId: id },
     orderBy: { createdAt: "asc" },
     select: {
       id: true,
