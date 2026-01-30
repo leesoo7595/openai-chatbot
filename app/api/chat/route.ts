@@ -11,14 +11,16 @@ function deriveTitleFromFirstUserMessage(messages: Msg[]) {
 
 export async function POST(req: Request) {
   try {
-    const { messages, conversationId } = (await req.json()) as {
+    const { messages, conversationId, clientMessageId } = (await req.json()) as {
       messages: Msg[];
       conversationId?: string;
+      clientMessageId?: string;
     };
 
     const { stream, conversationId: ensuredId } = await createChatStream({
       messages,
       conversationId,
+      clientMessageId,
     });
 
     const title = deriveTitleFromFirstUserMessage(messages);

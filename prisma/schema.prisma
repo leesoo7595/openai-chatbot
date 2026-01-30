@@ -23,11 +23,12 @@ model Conversation {
 }
 
 model Message {
-  id             String       @id @default(cuid())
-  conversationId String
-  role           String
-  content        String
-  createdAt      DateTime     @default(now())
+  id              String       @id @default(cuid())
+  conversationId  String
+  role            String
+  content         String
+  createdAt       DateTime     @default(now())
+  clientMessageId String?      @unique
 
   selectedModel  String?
   queryRouting   Json?

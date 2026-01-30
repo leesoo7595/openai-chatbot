@@ -18,6 +18,7 @@ const openai = new OpenAI({
 export async function createChatStream(params: {
   messages: Msg[];
   conversationId?: string;
+  clientMessageId?: string;
 }) {
   const conv = await ensureConversation(params.conversationId);
 
@@ -28,7 +29,7 @@ export async function createChatStream(params: {
       ? [{ role: "system", content: systemPrompt }, ...params.messages]
       : params.messages;
 
-  await saveLastUserMessage(conv.id, finalMessages);
+  await saveLastUserMessage(conv.id, finalMessages, params.clientMessageId);
 
   const assistant = await createAssistantPlaceholder(conv.id);
   const assistantMessageId = assistant.id;

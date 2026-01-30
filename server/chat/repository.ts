@@ -34,13 +34,21 @@ export async function ensureConversation(conversationId?: string) {
   return { ...ensured, systemPrompt: ensured.systemPrompt ?? "" };
 }
 
-// TODO: prevent duplicate user message saves (idempotency: clientMessageId or request-level userMessage)
 export async function saveLastUserMessage(
   conversationId: string,
   messages: Msg[],
+  clientMessageId?: string,
 ) {
   const lastUser = [...messages].reverse().find((m) => m.role === "user");
   if (!lastUser?.content) return;
+
+  // Prevent duplicate saves using clientMessageId for idempotency
+  if (clientMessageId) {
+    const existing = await prisma.message.findUnique({
+      where: { clientMessageId },
+    });
+    if (existing) return;
+  }
 
   await prisma.$transaction(async (tx) => {
     const msg = await tx.message.create({
@@ -48,6 +56,7 @@ export async function saveLastUserMessage(
         conversationId,
         role: "user",
         content: lastUser.content,
+        clientMessageId,
       },
     });
 
